@@ -1,0 +1,25 @@
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """Single source of truth for environment-driven configuration.
+
+    Values are loaded from backend/.env (falling back to real environment
+    variables) at process startup — nothing reads os.environ directly
+    elsewhere in the app.
+    """
+
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore", str_strip_whitespace=True
+    )
+
+    github_username: str = ""
+    github_token: str = ""
+    coverage_job_timeout_seconds: int = 300
+
+    @property
+    def github_credentials_configured(self) -> bool:
+        return bool(self.github_username.strip() and self.github_token.strip())
+
+
+settings = Settings()
