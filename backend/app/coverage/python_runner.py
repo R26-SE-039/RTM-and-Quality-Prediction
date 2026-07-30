@@ -27,7 +27,7 @@ def run(repo_dir: str, log_fn=lambda level, message: None) -> dict:
     timeout = config.settings.coverage_job_timeout_seconds
     venv_dir = os.path.join(repo_dir, ".rtm_venv")
 
-    log_fn("info", "🐍 Setting up an isolated Python virtual environment...")
+    log_fn("info", "Setting up an isolated Python virtual environment...")
     base_python = _find_python()
     result = _run([base_python, "-m", "venv", venv_dir], cwd=repo_dir, timeout=timeout, label="venv creation")
     if result.returncode != 0:
@@ -36,7 +36,7 @@ def run(repo_dir: str, log_fn=lambda level, message: None) -> dict:
     venv_python = os.path.join(venv_dir, "bin", "python")
     venv_pip = os.path.join(venv_dir, "bin", "pip")
 
-    log_fn("info", "📥 Installing pytest/pytest-cov tooling...")
+    log_fn("info", "Installing pytest/pytest-cov tooling...")
     result = _run(
         [venv_pip, "install", "--quiet", "--disable-pip-version-check", "pytest", "pytest-cov", "coverage"],
         cwd=repo_dir,
@@ -48,7 +48,7 @@ def run(repo_dir: str, log_fn=lambda level, message: None) -> dict:
 
     requirements_path = os.path.join(repo_dir, "requirements.txt")
     if os.path.exists(requirements_path):
-        log_fn("info", "📥 Installing repository dependencies (requirements.txt)...")
+        log_fn("info", "Installing repository dependencies (requirements.txt)...")
         result = _run(
             [venv_pip, "install", "--quiet", "--disable-pip-version-check", "-r", "requirements.txt"],
             cwd=repo_dir,
@@ -63,10 +63,10 @@ def run(repo_dir: str, log_fn=lambda level, message: None) -> dict:
         # Best-effort: some repos need to be installed for their own tests to
         # import them. Not fatal if this fails — pytest will surface any
         # resulting import errors instead.
-        log_fn("info", "📥 Installing the package itself (pyproject.toml/setup.py found)...")
+        log_fn("info", "Installing the package itself (pyproject.toml/setup.py found)...")
         _run([venv_pip, "install", "--quiet", "."], cwd=repo_dir, timeout=timeout, label="installing package")
 
-    log_fn("info", "🧪 Running pytest with coverage instrumentation...")
+    log_fn("info", "Running pytest with coverage instrumentation...")
     coverage_json = os.path.join(repo_dir, "coverage.json")
     result = _run(
         [
@@ -87,7 +87,7 @@ def run(repo_dir: str, log_fn=lambda level, message: None) -> dict:
         tail = (result.stdout + "\n" + result.stderr).strip()[-800:]
         raise CoverageRunError(f"pytest did not produce a coverage report. Output tail:\n{tail}")
 
-    log_fn("success", "✅ Tests completed — parsing coverage report...")
+    log_fn("success", "Tests completed — parsing coverage report...")
     with open(coverage_json) as f:
         data = json.load(f)
 
