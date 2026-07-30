@@ -46,12 +46,12 @@ def _run_coverage_tool(repo_url: str, repo_meta: dict, log_fn) -> dict:
     owner = repo_meta.get("owner", {}).get("login")
     repo = repo_meta.get("name")
 
-    log_fn("info", "📦 Step 1: Cloning repository...")
+    log_fn("info", "Step 1: Cloning repository...")
     repo_dir = clone.clone_repo(owner, repo)
-    log_fn("success", "✅ Repository cloned successfully.")
+    log_fn("success", "Repository cloned successfully.")
 
     try:
-        log_fn("info", "🔍 Step 2: Detecting project structure (checking repo root and subdirectories)...")
+        log_fn("info", "Step 2: Detecting project structure (checking repo root and subdirectories)...")
         projects = language.find_project_dirs(repo_dir)
         total_projects = len(projects["python"]) + len(projects["javascript"])
 
@@ -65,17 +65,17 @@ def _run_coverage_tool(repo_url: str, repo_meta: dict, log_fn) -> dict:
 
         if total_projects > 1:
             names = [_relative_prefix(d, repo_dir).rstrip("/") or "." for d in projects["python"] + projects["javascript"]]
-            log_fn("success", f"✅ Detected {total_projects} projects: {', '.join(names)}")
+            log_fn("success", f"Detected {total_projects} projects: {', '.join(names)}")
         else:
             kind = "Python" if projects["python"] else "JavaScript/TypeScript"
-            log_fn("success", f"✅ Detected a {kind} project.")
+            log_fn("success", f"Detected a {kind} project.")
 
         results = []
 
         for project_dir in projects["python"]:
             prefix = _relative_prefix(project_dir, repo_dir)
             if prefix:
-                log_fn("info", f"🐍 Analyzing Python project in '{prefix.rstrip('/')}'...")
+                log_fn("info", f"Analyzing Python project in '{prefix.rstrip('/')}'...")
             result = python_runner.run(project_dir, log_fn)
             for f in result["files"]:
                 f["file_name"] = prefix + f["file_name"]
@@ -84,7 +84,7 @@ def _run_coverage_tool(repo_url: str, repo_meta: dict, log_fn) -> dict:
         for project_dir in projects["javascript"]:
             prefix = _relative_prefix(project_dir, repo_dir)
             if prefix:
-                log_fn("info", f"🟨 Analyzing JavaScript/TypeScript project in '{prefix.rstrip('/')}'...")
+                log_fn("info", f"Analyzing JavaScript/TypeScript project in '{prefix.rstrip('/')}'...")
             result = js_runner.run(project_dir, log_fn)
             for f in result["files"]:
                 f["file_name"] = prefix + f["file_name"]
@@ -106,19 +106,19 @@ def run_coverage_job(repo_url: str, repo_meta: dict) -> None:
             result = _run_coverage_tool(repo_url, repo_meta, log_fn)
         except (clone.CloneError, UnsupportedLanguage, CoverageRunError) as e:
             logger.info("Coverage run failed for %s: %s", repo_url, e.message)
-            log_fn("error", f"❌ Error: {e.message}")
-            log_fn("tip", "💡 Tip: check the repository has a recognizable Python or JS/TS test setup.")
+            log_fn("error", f"Error: {e.message}")
+            log_fn("tip", "Tip: check the repository has a recognizable Python or JS/TS test setup.")
             state.set_status(db, models.CoverageJobStatus.ERROR, repo_url=repo_url, error_message=e.message)
             return
         except Exception as e:  # noqa: BLE001 - surface any unexpected tool failure to the UI
             logger.exception("Coverage run failed unexpectedly for %s", repo_url)
-            log_fn("error", f"❌ Unexpected error: {e}")
+            log_fn("error", f"Unexpected error: {e}")
             state.set_status(db, models.CoverageJobStatus.ERROR, repo_url=repo_url, error_message=str(e))
             return
 
         log_fn(
             "success",
-            f"🎉 Coverage analysis complete — {result['overall_coverage']:.1f}% overall coverage.",
+            f"Coverage analysis complete — {result['overall_coverage']:.1f}% overall coverage.",
         )
         state.save_result(
             db,
