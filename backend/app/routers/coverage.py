@@ -19,25 +19,25 @@ def analyze(payload: schemas.CoverageAnalyzeRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=400, detail="repo_url is required.")
 
     state.reset_logs(db)
-    state.append_log(db, "info", "🤖 Initiating GitHub Coverage Analysis Agent...")
-    state.append_log(db, "info", f"🔗 Repository Target: {payload.repo_url}")
-    state.append_log(db, "info", "🔑 Authenticating with GitHub credentials...")
+    state.append_log(db, "info", "Initiating GitHub Coverage Analysis Agent...")
+    state.append_log(db, "info", f"Repository Target: {payload.repo_url}")
+    state.append_log(db, "info", "Authenticating with GitHub credentials...")
 
     try:
         repo_meta = access_control.check_access(payload.repo_url)
     except AccessDenied as e:
-        state.append_log(db, "error", f"❌ Error: {e.message}")
+        state.append_log(db, "error", f"Error: {e.message}")
         state.append_log(
-            db, "tip", "💡 Tip: you can only analyze repositories you own or have collaborator access to."
+            db, "tip", "Tip: you can only analyze repositories you own or have collaborator access to."
         )
         state.set_status(db, models.CoverageJobStatus.ERROR, repo_url=payload.repo_url, error_message=e.message)
         raise HTTPException(status_code=403, detail=e.message) from e
     except GitHubAPIError as e:
-        state.append_log(db, "error", f"❌ Error: {e.message}")
+        state.append_log(db, "error", f"Error: {e.message}")
         state.set_status(db, models.CoverageJobStatus.ERROR, repo_url=payload.repo_url, error_message=e.message)
         raise HTTPException(status_code=e.status_code, detail=e.message) from e
 
-    state.append_log(db, "success", "✅ Access granted — starting analysis...")
+    state.append_log(db, "success", "Access granted — starting analysis...")
 
     if not state.try_acquire_run_lock():
         raise HTTPException(status_code=409, detail="An analysis is already running.")
