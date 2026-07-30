@@ -107,7 +107,7 @@ def run(repo_dir: str, log_fn=lambda level, message: None) -> dict:
             "how much of your code your tests exercise — add a test suite first, then re-run."
         )
 
-    log_fn("info", f"📦 Detected {runner} as the test runner — installing npm dependencies...")
+    log_fn("info", f"Detected {runner} as the test runner — installing npm dependencies...")
     install_cmd = (
         ["npm", "ci", "--no-audit", "--no-fund"]
         if os.path.exists(os.path.join(repo_dir, "package-lock.json"))
@@ -118,7 +118,7 @@ def run(repo_dir: str, log_fn=lambda level, message: None) -> dict:
         raise CoverageRunError(f"npm install failed: {result.stderr.strip()[-500:]}")
 
     if runner == "jest":
-        log_fn("info", "🧪 Running Jest with coverage instrumentation...")
+        log_fn("info", "Running Jest with coverage instrumentation...")
         result = _run(
             [
                 "npx",
@@ -137,7 +137,7 @@ def run(repo_dir: str, log_fn=lambda level, message: None) -> dict:
         # nyc wraps the repo's own `npm test` (mocha) command with istanbul
         # instrumentation — nyc itself doesn't need to be a declared
         # dependency, the same way pytest-cov isn't required from Python repos.
-        log_fn("info", "🧪 Running Mocha via nyc with coverage instrumentation...")
+        log_fn("info", "Running Mocha via nyc with coverage instrumentation...")
         result = _run(
             ["npx", "--yes", "nyc", "--reporter=json-summary", "--reporter=text", "npm", "test"],
             cwd=repo_dir,
@@ -150,5 +150,5 @@ def run(repo_dir: str, log_fn=lambda level, message: None) -> dict:
         tail = (result.stdout + "\n" + result.stderr).strip()[-800:]
         raise CoverageRunError(f"{runner} did not produce a coverage summary. Output tail:\n{tail}")
 
-    log_fn("success", f"✅ {runner.capitalize()} tests completed — parsing coverage report...")
+    log_fn("success", f"{runner.capitalize()} tests completed — parsing coverage report...")
     return _parse_coverage_summary(summary_path, repo_dir)
